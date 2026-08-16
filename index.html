@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سباق تخمين اللاعب — أونلاين</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --pitch-950: #071a14;
+            --pitch-900: #0c2921;
+            --pitch-800: #12392c;
+            --pitch-700: #1a4c3a;
+            --line: #28584420;
+            --chalk: #f3f6ec;
+            --chalk-dim: #aebfad;
+            --gold: #f2c14e;
+            --gold-dim: #caa23c;
+            --sky: #8fb8ff;
+            --grass: #3ecf8e;
+            --red: #e5484d;
+            --violet: #c792ea;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--chalk);
+            min-height: 100vh;
+            padding: 22px 14px 40px;
+            background:
+                radial-gradient(1100px 500px at 50% -10%, #1a4c3a55, transparent 60%),
+                repeating-linear-gradient(90deg, #ffffff05 0 60px, #ffffff00 60px 120px),
+                linear-gradient(180deg, var(--pitch-950), var(--pitch-900) 40%, #081f18 100%);
+            position: relative;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---- Header ---- */
+        .stadium-head {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: .12em;
+            color: var(--sky);
+            background: #8fb8ff14;
+            border: 1px solid #8fb8ff33;
+            padding: 5px 14px;
+            border-radius: 999px;
+            margin-bottom: 12px;
+        }
+
+        .eyebrow .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--sky);
+            box-shadow: 0 0 8px var(--sky);
+        }
+
+        h1 {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 900;
+            font-size: clamp(26px, 5vw, 38px);
+            margin: 0 0 8px;
+            letter-spacing: -.01em;
+            text-shadow: 0 4px 24px #00000060;
+        }
+
+        h1 .accent {
+            color: var(--gold);
+        }
+
+        .subtitle {
+            color: var(--chalk-dim);
+            font-size: 14px;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #0e2c22cc, #0a2119cc);
+            border: 1px solid #ffffff14;
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 20px 60px -20px #000000a0, inset 0 1px 0 #ffffff0d;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeUp .35s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ---- Player selection cards ---- */
+        .field-note {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .field-note p {
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .roster-count {
+            font-size: 12px;
+            color: var(--chalk-dim);
+            background: #ffffff0d;
+            padding: 4px 12px;
+            border-radius: 999px;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 6px 6px 10px;
+            margin-bottom: 20px;
+        }
+
+        .player-chip {
+            position: relative;
+            background: #ffffff08;
+            border: 1px solid #ffffff14;
+            border-radius: 14px;
+            padding: 14px 8px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform .15s, background .2s, border-color .2s, box-shadow .2s;
+            border-inline-start: 3px solid var(--pos-color, #ffffff20);
+        }
+
+        .player-chip:hover {
+            background: #ffffff12;
+            transform: translateY(-2px);
+        }
+
+        .player-chip.selected {
+            border-color: var(--gold);
+            background: #f2c14e1f;
+            box-shadow: 0 0 0 1px var(--gold), 0 10px 26px -10px #f2c14e70;
+            transform: translateY(-2px);
+        }
+
+        .player-chip.eliminated {
+            opacity: .28;
+            filter: grayscale(.6);
+        }
+
+        .player-chip .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .player-chip .pname {
+            font-size: 12.5px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .player-chip .ptag {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 9.5px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            letter-spacing: .04em;
+            color: var(--pos-color, var(--chalk-dim));
+            background: #00000030;
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+            color: #182014;
+            border: none;
+            padding: 13px 26px;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .2s, filter .2s;
+            box-shadow: 0 8px 20px -6px #f2c14e60;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .btn:disabled {
+            background: #3a463f;
+            color: #7c8a80;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn.secondary {
+            background: #ffffff12;
+            color: var(--chalk);
+            box-shadow: none;
+            border: 1px solid #ffffff22;
+        }
+
+        .btn.secondary:hover {
+            background: #ffffff1c;
+        }
+
+        .btn.danger {
+            background: linear-gradient(180deg, #f0787c, var(--red));
+            color: #2a0d0e;
+            box-shadow: 0 8px 20px -6px #e5484d70;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        /* ---- Scoreboard ---- */
+        .scoreboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .score-panel {
+            background: #ffffff08;
+            border: 1px solid #ffffff14;
+            border-radius: 14px;
+            padding: 12px 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-panel.mine {
+            border-color: #f2c14e33;
+        }
+
+        .score-panel.theirs {
+            border-color: #8fb8ff33;
+        }
+
+        .score-panel .who {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .score-panel.mine .who {
+            color: var(--gold);
+        }
+
+        .score-panel.theirs .who {
+            color: var(--sky);
+        }
+
+        .score-panel .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 10px;
+        }
+
+        .stat-block {
+            text-align: center;
+        }
+
+        .stat-block b {
+            display: block;
+            font-family: 'Cairo', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            transition: transform .2s;
+        }
+
+        .stat-block span {
+            font-size: 10.5px;
+            color: var(--chalk-dim);
+        }
+
+        .secret-name {
+            font-size: 11px;
+            color: var(--chalk-dim);
+            margin-top: 8px;
+        }
+
+        .secret-name b {
+            color: var(--chalk);
+            font-weight: 700;
+        }
+
+        /* ---- Turn banner ---- */
+        .turn-banner {
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            margin-bottom: 18px;
+            font-size: 14.5px;
+            border: 1px solid transparent;
+        }
+
+        .turn-banner.user {
+            background: #f2c14e17;
+            color: var(--gold);
+            border-color: #f2c14e33;
+        }
+
+        .turn-banner.ai {
+            background: #8fb8ff17;
+            color: var(--sky);
+            border-color: #8fb8ff33;
+        }
+
+        .turn-banner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, transparent 30%, #ffffff30 48%, transparent 66%);
+            transform: translateX(-120%);
+            animation: sweep 1.1s ease;
+        }
+
+        @keyframes sweep {
+            to {
+                transform: translateX(120%);
+            }
+        }
+
+        /* ---- Category accordions ---- */
+        .cat {
+            border: 1px solid #ffffff14;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            background: #ffffff05;
+        }
+
+        .cat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 13.5px;
+            user-select: none;
+        }
+
+        .cat-head:hover {
+            background: #ffffff08;
+        }
+
+        .cat-head .count {
+            font-size: 11px;
+            color: var(--chalk-dim);
+            font-weight: 500;
+        }
+
+        .cat-head .chev {
+            transition: transform .2s;
+            color: var(--chalk-dim);
+        }
+
+        .cat.open .cat-head .chev {
+            transform: rotate(180deg);
+        }
+
+        .cat-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .25s ease;
+        }
+
+        .cat.open .cat-body {
+            max-height: 600px;
+        }
+
+        .questions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 0 10px 10px;
+        }
+
+        .q-item {
+            background: #ffffff08;
+            border: 1px solid #ffffff12;
+            border-radius: 10px;
+            padding: 11px 13px;
+            cursor: pointer;
+            font-size: 13.5px;
+            transition: background .15s, border-color .15s;
+        }
+
+        .q-item:hover {
+            background: #f2c14e14;
+            border-color: #f2c14e40;
+        }
+
+        .guess-toggle-wrap {
+            text-align: center;
+            margin-top: 14px;
+        }
+
+        #oGuessGridWrap {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #ffffff1f;
+        }
+
+        .guess-legend {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--chalk-dim);
+            margin-bottom: 10px;
+        }
+
+        .guess-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dotlegend {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* ---- Commentary log ---- */
+        .log-box {
+            background: #00000030;
+            border: 1px solid #ffffff10;
+            border-radius: 12px;
+            padding: 12px 14px;
+            max-height: 170px;
+            overflow-y: auto;
+            margin-bottom: 6px;
+            font-size: 12.5px;
+            color: var(--chalk-dim);
+        }
+
+        .log-box .log-title {
+            font-family: 'Cairo', sans-serif;
+            font-size: 10.5px;
+            letter-spacing: .08em;
+            color: var(--gold-dim);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .log-entry {
+            margin-bottom: 7px;
+            padding-bottom: 7px;
+            border-bottom: 1px solid #ffffff0a;
+            line-height: 1.6;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .tag {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            padding: 1px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            margin-inline-end: 6px;
+        }
+
+        .tag.user-tag {
+            background: #f2c14e2a;
+            color: var(--gold);
+        }
+
+        .tag.ai-tag {
+            background: #8fb8ff2a;
+            color: var(--sky);
+        }
+
+        /* ---- Result ---- */
+        .result-box {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+        .result-box .icon {
+            font-size: 52px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .result-box h2 {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 900;
+            margin: 0 0 8px;
+            font-size: 24px;
+        }
+
+        .result-box p {
+            color: var(--chalk-dim);
+            margin-bottom: 6px;
+        }
+
+        .reveal-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0 24px;
+            flex-wrap: wrap;
+            perspective: 800px;
+        }
+
+        .reveal-item {
+            background: #ffffff08;
+            border: 1px solid #ffffff16;
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+            min-width: 150px;
+            animation: flip .6s ease;
+        }
+
+        @keyframes flip {
+            from {
+                transform: rotateY(90deg);
+                opacity: 0;
+            }
+
+            to {
+                transform: rotateY(0);
+                opacity: 1;
+            }
+        }
+
+        .reveal-item .label {
+            font-size: 11px;
+            color: var(--chalk-dim);
+            margin-bottom: 8px;
+            font-family: 'Cairo', sans-serif;
+            letter-spacing: .05em;
+        }
+
+        .reveal-item .icon {
+            font-size: 30px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .reveal-item .rname {
+            font-weight: 800;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ffffff30;
+            border-radius: 10px;
+        }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 10.5px;
+            color: #6f8378;
+            margin-top: 14px;
+        }
+
+        /* ---- Online lobby ---- */
+        .lobby-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+
+        .code-input {
+            width: 100%;
+            text-align: center;
+            letter-spacing: .3em;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            font-size: 22px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #ffffff22;
+            background: #00000030;
+            color: var(--chalk);
+            text-transform: uppercase;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 12.5px;
+            color: var(--chalk-dim);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .back-link:hover {
+            color: var(--chalk);
+        }
+
+        .waiting-pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--sky);
+            margin-inline-start: 6px;
+            animation: wpulse 1.2s infinite;
+        }
+
+        @keyframes wpulse {
+
+            0%,
+            100% {
+                opacity: .3;
+                transform: scale(.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .lobby-error {
+            color: var(--red);
+            font-size: 12.5px;
+            text-align: center;
+            margin-top: 8px;
+            min-height: 16px;
+        }
+
+        .waiting-turn-box {
+            text-align: center;
+            padding: 34px 10px;
+            color: var(--chalk-dim);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* ---- شريط التصفية (الفلاتر) ---- */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .filter-btn {
+            background: #ffffff0d;
+            border: 1px solid #ffffff1a;
+            color: var(--chalk-dim);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #ffffff1a;
+            color: var(--chalk);
+        }
+
+        .filter-btn.active {
+            background: var(--gold);
+            color: #182014;
+            border-color: var(--gold);
+            box-shadow: 0 4px 12px -4px #f2c14e80;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="stadium-head">
+            <div class="eyebrow"><span class="dot"></span> نسخة اللعب الجماعي أونلاين 🌐</div>
+            <h1>⚽ سباق تخمين <span class="accent">اللاعب</span></h1>
+            <p class="subtitle">أنشئ غرفة وابعت الكود لصاحبك، واكتشفوا مين هيقدر يخمّن لاعب التاني الأول!</p>
+        </div>
+
+        <div class="card">
+
+            <!-- شاشة اللوبي -->
+            <div class="screen active" id="screen-online-lobby">
+                <div class="lobby-actions" id="lobbyChoice" style="margin-top:20px;">
+                    <button class="btn" onclick="goCreateRoom()">➕ أنشئ غرفة جديدة</button>
+                    <button class="btn secondary" onclick="showJoinInput()">🔑 عندي كود، عايز أنضم</button>
+                </div>
+                <div class="lobby-actions" id="joinInputWrap" style="display:none; margin-top:16px;">
+                    <input class="code-input" id="joinCodeInput" maxlength="4" placeholder="ادخل الكود هنا">
+                    <button class="btn" onclick="attemptJoinRoom()">انضم للغرفة ⚡</button>
+                </div>
+                <div class="lobby-error" id="lobbyError"></div>
+            </div>
+
+            <!-- شاشة اختيار اللاعب السري -->
+            <div class="screen" id="screen-online-select">
+                <div class="field-note">
+                    <p id="onlineSelectPrompt">👤 اختر لاعبك السري</p>
+                    <span class="roster-count" id="onlineRosterCount">0 لاعب</span>
+                </div>
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="changeFilter('ALL', this)">الكل</button>
+                    <button class="filter-btn" onclick="changeFilter('FW', this)">الهجوم</button>
+                    <button class="filter-btn" onclick="changeFilter('MF', this)">الوسط</button>
+                    <button class="filter-btn" onclick="changeFilter('DF', this)">الدفاع</button>
+                    <button class="filter-btn" onclick="changeFilter('GK', this)">حراس المرمى</button>
+                </div>
+                <div class="players-grid" id="onlinePlayersGrid"></div>
+                <div class="actions">
+                    <button class="btn" id="onlineConfirmBtn" disabled>تأكيد الاختيار ⚡</button>
+                </div>
+                <div style="text-align:center;"><span class="back-link" onclick="leaveOnline()">‹ إلغاء والرجوع</span>
+                </div>
+            </div>
+
+            <!-- شاشة السباق -->
+            <div class="screen" id="screen-online-battle">
+                <div class="scoreboard">
+                    <div class="score-panel mine">
+                        <div class="who">🟡 أنت</div>
+                        <div class="stat-row">
+                            <div class="stat-block"><b id="oUserQCount">0</b><span>أسئلة سألتها</span></div>
+                            <div class="stat-block" id="oUserCandBlock"><b id="oUserCandCount">0</b><span>احتمال متبقي
+                                    لصاحبك</span></div>
+                        </div>
+                        <div class="secret-name">لاعبك: <b id="oMyPlayerName">-</b></div>
+                    </div>
+                    <div class="score-panel theirs">
+                        <div class="who">🔵 صاحبك</div>
+                        <div class="stat-row">
+                            <div class="stat-block"><b id="oFriendQCount">0</b><span>أسئلة سألها</span></div>
+                            <div class="stat-block" id="oFriendCandBlock"><b id="oFriendCandCount">0</b><span>احتمال
+                                    متبقي لك</span></div>
+                        </div>
+                        <div class="secret-name">الكود: <b id="oRoomCodeTag">----</b></div>
+                    </div>
+                </div>
+
+                <div class="turn-banner ai" id="oTurnBanner">جاري التحميل...</div>
+
+                <div id="oMyTurnBox">
+                    <div id="oCategoriesWrap"></div>
+                    <div class="guess-toggle-wrap">
+                        <button class="btn danger" onclick="openOnlineGuessGrid()">🎯 عندي تخمين للاعب صاحبك!</button>
+                    </div>
+                    <div id="oGuessGridWrap" style="display:none;">
+                        <p
+                            style="margin-bottom:8px; font-weight:700; font-family:'Cairo',sans-serif; font-size:13.5px;">
+                            اختر لاعب صاحبك السري:</p>
+                        <div class="guess-legend">
+                            <span><i class="dotlegend" style="background:var(--gold);"></i> لسه ممكن يكون هو</span>
+                            <span><i class="dotlegend" style="background:#7c8a80;"></i> مستبعد حسب إجاباتك</span>
+                        </div>
+                        <div class="players-grid" id="oGuessGrid"></div>
+                    </div>
+                </div>
+
+                <div id="oWaitTurnBox" style="display:none;">
+                    <div class="waiting-turn-box">⏳ دور صاحبك دلوقتي... استنى شوية<span class="waiting-pulse"></span>
+                    </div>
+                </div>
+
+                <div class="log-box" id="oLogBox">
+                    <div class="log-title">📣 تعليق المباراة</div>
+                </div>
+                <div style="text-align:center;"><span class="back-link" onclick="leaveOnline()">‹ مغادرة الغرفة</span>
+                </div>
+            </div>
+
+            <!-- شاشة النتيجة -->
+            <div class="screen" id="screen-online-result">
+                <div class="result-box">
+                    <span class="icon" id="oResultIcon">🏆</span>
+                    <h2 id="oResultTitle">فزت!</h2>
+                    <p id="oResultText"></p>
+                    <div class="reveal-row">
+                        <div class="reveal-item">
+                            <div class="label">لاعبك</div>
+                            <span class="icon" id="oRevealUserIcon"></span>
+                            <div class="rname" id="oRevealUserName"></div>
+                        </div>
+                        <div class="reveal-item">
+                            <div class="label">لاعب صاحبك</div>
+                            <span class="icon" id="oRevealFriendIcon"></span>
+                            <div class="rname" id="oRevealFriendName"></div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="leaveOnline()">🔄 العودة للرئيسية</button>
+                </div>
+            </div>
+
+        </div>
+        <p class="disclaimer">بيانات الأندية/الأرقام تقريبية وممكن تكون اتغيّرت — اللعبة للتسلية مش مرجع رسمي ⚽</p>
+    </div>
+
+    <script type="module">
+        /* ==================== FIREBASE SETUP ==================== */
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getDatabase, ref, set, get, onValue
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvgpsKFAVygseORoVQIjOBuYyWJ9qWmeU",
+            authDomain: "game1-1bfda.firebaseapp.com",
+            projectId: "game1-1bfda",
+            storageBucket: "game1-1bfda.firebasestorage.app",
+            messagingSenderId: "1035543964284",
+            appId: "1:1035543964284:web:865e03bb47725e5960f7f9",
+            measurementId: "G-C2Z6XD98TD",
+            databaseURL: "https://game1-1bfda-default-rtdb.firebaseio.com"
+        };
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getDatabase(fbApp);
+        const ROOMS_PATH = "guessPlayerRooms";
+
+        /* ==================== DATA ==================== */
+        const POS_COLOR = { FW: "#f2c14e", MF: "#3ecf8e", DF: "#8fb8ff", GK: "#c792ea" };
+        const POS_LABEL = { FW: "مهاجم", MF: "وسط", DF: "مدافع", GK: "حارس" };
+
+        const players = [
+            { name: "ليونيل ميسي", icon: "🇦🇷", continent: "SouthAmerica", position: "FW", league: "MLS", ageOver30: true, ballonDor: true, leftFooted: true, worldCup: true, ucl: true, captain: true, continental: true, tall: false, caps100: true },
+            { name: "كريستيانو رونالدو", icon: "🇵🇹", continent: "Europe", position: "FW", league: "SaudiPro", ageOver30: true, ballonDor: true, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: true, tall: false, caps100: true },
+            { name: "كيليان مبابي", icon: "🇫🇷", continent: "Europe", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: true, ucl: false, captain: true, continental: false, tall: false, caps100: false },
+            { name: "نيمار", icon: "🇧🇷", continent: "SouthAmerica", position: "FW", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: true },
+            { name: "إيرلينغ هالاند", icon: "🇳🇴", continent: "Europe", position: "FW", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: true, caps100: false },
+            { name: "كيفن دي بروين", icon: "🇧🇪", continent: "Europe", position: "MF", league: "SerieA", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: true },
+            { name: "لوكا مودريتش", icon: "🇭🇷", continent: "Europe", position: "MF", league: "SerieA", ageOver30: true, ballonDor: true, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: false, caps100: true },
+            { name: "فيرجيل فان دايك", icon: "🇳🇱", continent: "Europe", position: "DF", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: true, caps100: true },
+            { name: "تيبو كورتوا", icon: "🇧🇪", continent: "Europe", position: "GK", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: true, caps100: true },
+            { name: "محمد صلاح", icon: "🇪🇬", continent: "Africa", position: "FW", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: false, caps100: true },
+            { name: "ساديو ماني", icon: "🇸🇳", continent: "Africa", position: "FW", league: "SaudiPro", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: true },
+            { name: "فينيسيوس جونيور", icon: "🇧🇷", continent: "SouthAmerica", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "جود بيلينجهام", icon: "🇬🇧", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "بيدري", icon: "🇪🇸", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "بوكايو ساكا", icon: "🇬🇧", continent: "Europe", position: "FW", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "هاري كين", icon: "🇬🇧", continent: "Europe", position: "FW", league: "Bundesliga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: true, continental: false, tall: false, caps100: true },
+            { name: "روبرت ليفاندوفسكي", icon: "🇵🇱", continent: "Europe", position: "FW", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: false, caps100: true },
+            { name: "كريم بنزيما", icon: "🇫🇷", continent: "Europe", position: "FW", league: "SaudiPro", ageOver30: true, ballonDor: true, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "أنطوان جريزمان", icon: "🇫🇷", continent: "Europe", position: "FW", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: false, captain: false, continental: false, tall: false, caps100: true },
+            { name: "كاسيميرو", icon: "🇧🇷", continent: "SouthAmerica", position: "MF", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "نغولو كانتي", icon: "🇫🇷", continent: "Europe", position: "MF", league: "SaudiPro", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "سيرجيو راموس", icon: "🇪🇸", continent: "Europe", position: "DF", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: true, captain: true, continental: true, tall: false, caps100: true },
+            { name: "مانويل نوير", icon: "🇩🇪", continent: "Europe", position: "GK", league: "Bundesliga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: true, captain: true, continental: false, tall: true, caps100: true },
+            { name: "أليسون بيكر", icon: "🇧🇷", continent: "SouthAmerica", position: "GK", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: true, caps100: false },
+            { name: "فرينكي دي يونج", icon: "🇳🇱", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "فيل فودين", icon: "🇬🇧", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "أشرف حكيمي", icon: "🇲🇦", continent: "Africa", position: "DF", league: "Ligue1", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "رودري", icon: "🇪🇸", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: true, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+            { name: "سون هيونج مين", icon: "🇰🇷", continent: "Asia", position: "FW", league: "MLS", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: true, continental: false, tall: false, caps100: true },
+            { name: "تاكيفوسا كوبو", icon: "🇯🇵", continent: "Asia", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "كريستيان بوليسيتش", icon: "🇺🇸", continent: "NorthAmerica", position: "FW", league: "SerieA", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "ألفونسو ديفيز", icon: "🇨🇦", continent: "NorthAmerica", position: "DF", league: "Bundesliga", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "فيكتور أوسيمين", icon: "🇳🇬", continent: "Africa", position: "FW", league: "Other", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "أندريه أونانا", icon: "🇨🇲", continent: "Africa", position: "GK", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+            { name: "جيانلويجي دوناروما", icon: "🇮🇹", continent: "Europe", position: "GK", league: "Ligue1", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: true, caps100: true },
+            { name: "مارك أندريه تير شتيجن", icon: "🇩🇪", continent: "Europe", position: "GK", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "جوشوا كيميش", icon: "🇩🇪", continent: "Europe", position: "MF", league: "Bundesliga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: false, caps100: true },
+            { name: "جمال موسيالا", icon: "🇩🇪", continent: "Europe", position: "MF", league: "Bundesliga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "فلوريان فيرتس", icon: "🇩🇪", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "لامين يامال", icon: "🇪🇸", continent: "Europe", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: true, tall: false, caps100: false },
+            { name: "عثمان ديمبيلي", icon: "🇫🇷", continent: "Europe", position: "FW", league: "Ligue1", ageOver30: false, ballonDor: true, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "ديكلان رايس", icon: "🇬🇧", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "وليام ساليبا", icon: "🇫🇷", continent: "Europe", position: "DF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+            // 🌍 نجوم عالميين وأساطير
+            { name: "توني كروس", icon: "🇩🇪", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: true, captain: false, continental: false, tall: false, caps100: true },
+            { name: "رافائيل لياو", icon: "🇵🇹", continent: "Europe", position: "FW", league: "SerieA", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "لاوتارو مارتينيز", icon: "🇦🇷", continent: "SouthAmerica", position: "FW", league: "SerieA", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: true, ucl: false, captain: false, continental: true, tall: false, caps100: false },
+            { name: "برونو فيرنانديز", icon: "🇵🇹", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "أردا جولر", icon: "🇹🇷", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "رونالدينيو", icon: "🇧🇷", continent: "SouthAmerica", position: "MF", league: "Other", ageOver30: true, ballonDor: true, leftFooted: false, worldCup: true, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+
+            // 🦅 نجوم النادي الأهلي
+            { name: "محمد الشناوي", icon: "🇪🇬", continent: "Africa", position: "GK", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+            { name: "إمام عاشور", icon: "🇪🇬", continent: "Africa", position: "MF", league: "Other", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "بيرسي تاو", icon: "🇿🇦", continent: "Africa", position: "FW", league: "Other", ageOver30: true, ballonDor: false, leftFooted: true, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "وسام أبو علي", icon: "🇵🇸", continent: "Asia", position: "FW", league: "Other", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "حسين الشحات", icon: "🇪🇬", continent: "Africa", position: "FW", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+
+            // 🇪🇬 المحترفين المصريين والعرب
+            { name: "عمر مرموش", icon: "🇪🇬", continent: "Africa", position: "FW", league: "Bundesliga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "محمود تريزيجيه", icon: "🇪🇬", continent: "Africa", position: "MF", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "رياض محرز", icon: "🇩🇿", continent: "Africa", position: "FW", league: "SaudiPro", ageOver30: true, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: true, continental: true, tall: false, caps100: true },
+            { name: "ياسين بونو", icon: "🇲🇦", continent: "Africa", position: "GK", league: "SaudiPro", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+            // 🎯 خط الهجوم (المشاهير الجدد)
+            { name: "لويس سواريز", icon: "🇺🇾", continent: "SouthAmerica", position: "FW", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: true },
+            { name: "روميلو لوكاكو", icon: "🇧🇪", continent: "Europe", position: "FW", league: "SerieA", ageOver30: true, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: false, tall: true, caps100: true },
+            { name: "جوليان ألفاريز", icon: "🇦🇷", continent: "SouthAmerica", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: true, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+            { name: "رودريجو", icon: "🇧🇷", continent: "SouthAmerica", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "رافينيا", icon: "🇧🇷", continent: "SouthAmerica", position: "FW", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "خفيتشا كفاراتسخيليا", icon: "🇬🇪", continent: "Europe", position: "FW", league: "SerieA", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+            { name: "داروين نونيز", icon: "🇺🇾", continent: "SouthAmerica", position: "FW", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+
+            // 🎩 خط الوسط (المشاهير الجدد)
+            { name: "برناردو سيلفا", icon: "🇵🇹", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+            { name: "مارتن أوديغارد", icon: "🇳🇴", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: false, captain: true, continental: false, tall: false, caps100: false },
+            { name: "فيديريكو فالفيردي", icon: "🇺🇾", continent: "SouthAmerica", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: true, continental: false, tall: false, caps100: false },
+            { name: "إدواردو كامافينغا", icon: "🇫🇷", continent: "Europe", position: "MF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+            { name: "كول بالمر", icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", continent: "Europe", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: true, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+            { name: "أليكسيس ماك أليستر", icon: "🇦🇷", continent: "SouthAmerica", position: "MF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: true, ucl: false, captain: false, continental: true, tall: false, caps100: false },
+            { name: "أحمد سيد زيزو", icon: "🇪🇬", continent: "Africa", position: "MF", league: "Other", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: false, caps100: false },
+
+            // 🛡️ خط الدفاع (المشاهير الجدد)
+            { name: "أنطونيو روديغر", icon: "🇩🇪", continent: "Europe", position: "DF", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: true, caps100: false },
+            { name: "روبن دياز", icon: "🇵🇹", continent: "Europe", position: "DF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: true, caps100: false },
+            { name: "جول كوندي", icon: "🇫🇷", continent: "Europe", position: "DF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: true, tall: false, caps100: false },
+            { name: "داني كارفاخال", icon: "🇪🇸", continent: "Europe", position: "DF", league: "LaLiga", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: true, tall: false, caps100: false },
+            { name: "ترينت ألكسندر أرنولد", icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", continent: "Europe", position: "DF", league: "PremierLeague", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: true, captain: false, continental: false, tall: false, caps100: false },
+            { name: "رونالد أراوخو", icon: "🇺🇾", continent: "SouthAmerica", position: "DF", league: "LaLiga", ageOver30: false, ballonDor: false, leftFooted: false, worldCup: false, ucl: false, captain: false, continental: false, tall: true, caps100: false },
+
+            // 🧤 حراس المرمى (المشاهير الجدد)
+            { name: "إيدرسون", icon: "🇧🇷", continent: "SouthAmerica", position: "GK", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: true, worldCup: false, ucl: true, captain: false, continental: true, tall: true, caps100: false },
+            { name: "إيميليانو مارتينيز", icon: "🇦🇷", continent: "SouthAmerica", position: "GK", league: "PremierLeague", ageOver30: true, ballonDor: false, leftFooted: false, worldCup: true, ucl: false, captain: false, continental: true, tall: true, caps100: false }
+        ];
+
+        const features = [
+            // القارة
+            { key: "isEuropean", cat: "continent", label: "هل جنسية اللاعب أوروبية؟", fn: p => p.continent === "Europe" },
+            { key: "isSouthAmerican", cat: "continent", label: "هل اللاعب من أمريكا الجنوبية؟", fn: p => p.continent === "SouthAmerica" },
+            { key: "isAfrican", cat: "continent", label: "هل اللاعب أفريقي الجنسية؟", fn: p => p.continent === "Africa" },
+            { key: "isAsian", cat: "continent", label: "هل اللاعب آسيوي الجنسية؟", fn: p => p.continent === "Asia" },
+            { key: "isNorthAmerican", cat: "continent", label: "هل اللاعب من أمريكا الشمالية؟", fn: p => p.continent === "NorthAmerica" },
+            // المركز
+            { key: "isForward", cat: "position", label: "هل يلعب في مركز الهجوم؟", fn: p => p.position === "FW" },
+            { key: "isMidfielder", cat: "position", label: "هل يلعب في خط الوسط؟", fn: p => p.position === "MF" },
+            { key: "isDefender", cat: "position", label: "هل يلعب في خط الدفاع؟", fn: p => p.position === "DF" },
+            { key: "isGoalkeeper", cat: "position", label: "هل هو حارس مرمى؟", fn: p => p.position === "GK" },
+            // الدوري
+            { key: "inPremierLeague", cat: "league", label: "هل يلعب حاليًا في الدوري الإنجليزي؟", fn: p => p.league === "PremierLeague" },
+            { key: "inLaLiga", cat: "league", label: "هل يلعب حاليًا في الدوري الإسباني؟", fn: p => p.league === "LaLiga" },
+            { key: "inSaudiLeague", cat: "league", label: "هل يلعب حاليًا في الدوري السعودي؟", fn: p => p.league === "SaudiPro" },
+            { key: "inSerieA", cat: "league", label: "هل يلعب حاليًا في الدوري الإيطالي؟", fn: p => p.league === "SerieA" },
+            { key: "inBundesliga", cat: "league", label: "هل يلعب حاليًا في الدوري الألماني؟", fn: p => p.league === "Bundesliga" },
+            { key: "inLigue1", cat: "league", label: "هل يلعب حاليًا في الدوري الفرنسي؟", fn: p => p.league === "Ligue1" },
+            { key: "inMLS", cat: "league", label: "هل يلعب حاليًا في الدوري الأمريكي MLS؟", fn: p => p.league === "MLS" },
+            // الإنجازات والصفات
+            { key: "ageOver30", cat: "traits", label: "هل عمر اللاعب فوق 30 سنة؟", fn: p => p.ageOver30 },
+            { key: "wonBallonDor", cat: "traits", label: "هل فاز اللاعب بجائزة الكرة الذهبية؟", fn: p => p.ballonDor },
+            { key: "leftFooted", cat: "traits", label: "هل اللاعب أعسر (يعتمد على قدمه اليسرى)؟", fn: p => p.leftFooted },
+            { key: "wonWorldCup", cat: "traits", label: "هل فاز اللاعب بكأس العالم مع منتخبه؟", fn: p => p.worldCup },
+            { key: "wonUCL", cat: "traits", label: "هل فاز اللاعب بدوري أبطال أوروبا؟", fn: p => p.ucl },
+            { key: "isCaptain", cat: "traits", label: "هل هو قائد منتخب بلاده؟", fn: p => p.captain },
+            { key: "wonContinental", cat: "traits", label: "هل فاز بلقب قاري مع منتخبه (يورو / كوبا أمريكا / أمم أفريقيا)؟", fn: p => p.continental },
+            { key: "isTall", cat: "traits", label: "هل طول اللاعب 190 سم أو أكثر؟", fn: p => p.tall },
+            { key: "caps100", cat: "traits", label: "هل لعب أكثر من 100 مباراة دولية مع منتخبه؟", fn: p => p.caps100 },
+            // === أسئلة الجنسيات المحددة (تنتمي لتصنيف continent) ===
+            { key: "isEgyptian", cat: "continent", label: "هل اللاعب مصري الجنسية؟", fn: p => ["محمد صلاح", "محمد الشناوي", "إمام عاشور", "حسين الشحات", "عمر مرموش", "محمود تريزيجيه", "أحمد سيد زيزو"].includes(p.name) },
+            { key: "isArab", cat: "continent", label: "هل اللاعب من دولة عربية؟", fn: p => ["محمد صلاح", "أشرف حكيمي", "رياض محرز", "ياسين بونو", "محمد الشناوي", "إمام عاشور", "حسين الشحات", "وسام أبو علي", "عمر مرموش", "محمود تريزيجيه", "أحمد سيد زيزو"].includes(p.name) },
+            { key: "isBrazilian", cat: "continent", label: "هل اللاعب برازيلي؟", fn: p => ["نيمار", "فينيسيوس جونيور", "كاسيميرو", "أليسون بيكر", "رونالدينيو", "رودريجو", "رافينيا", "إيدرسون"].includes(p.name) },
+            { key: "isFrench", cat: "continent", label: "هل اللاعب فرنسي؟", fn: p => ["كيليان مبابي", "كريم بنزيما", "أنطوان جريزمان", "نغولو كانتي", "عثمان ديمبيلي", "وليام ساليبا", "إدواردو كامافينغا", "جول كوندي"].includes(p.name) },
+            { key: "isArgentine", cat: "continent", label: "هل اللاعب أرجنتيني؟", fn: p => ["ليونيل ميسي", "لاوتارو مارتينيز", "جوليان ألفاريز", "أليكسيس ماك أليستر", "إيميليانو مارتينيز"].includes(p.name) },
+            { key: "isEnglish", cat: "continent", label: "هل اللاعب إنجليزي؟", fn: p => ["جود بيلينجهام", "بوكايو ساكا", "هاري كين", "فيل فودين", "ديكلان رايس", "كول بالمر", "ترينت ألكسندر أرنولد"].includes(p.name) },
+
+            // === أسئلة الأندية الكبرى (تنتمي للتصنيف الجديد club) ===
+            { key: "playedForRealMadrid", cat: "club", label: "هل لعب (أو يلعب حالياً) لريال مدريد؟", fn: p => ["كريستيانو رونالدو", "كيليان مبابي", "لوكا مودريتش", "تيبو كورتوا", "فينيسيوس جونيور", "جود بيلينجهام", "كريم بنزيما", "كاسيميرو", "سيرجيو راموس", "توني كروس", "أردا جولر", "فيديريكو فالفيردي", "إدواردو كامافينغا", "أنطونيو روديغر", "داني كارفاخال", "رودريجو"].includes(p.name) },
+            { key: "playedForBarcelona", cat: "club", label: "هل لعب (أو يلعب حالياً) لبرشلونة؟", fn: p => ["ليونيل ميسي", "نيمار", "بيدري", "روبرت ليفاندوفسكي", "فرينكي دي يونج", "مارك أندريه تير شتيجن", "لامين يامال", "عثمان ديمبيلي", "رونالدينيو", "لويس سواريز", "رافينيا", "جول كوندي", "رونالد أراوخو"].includes(p.name) },
+            { key: "playedForManCity", cat: "club", label: "هل لعب (أو يلعب حالياً) لمانشستر سيتي؟", fn: p => ["إيرلينغ هالاند", "كيفن دي بروين", "فيل فودين", "رودري", "جوليان ألفاريز", "برناردو سيلفا", "روبن دياز", "إيدرسون", "رياض محرز"].includes(p.name) },
+            { key: "playedForLiverpool", cat: "club", label: "هل لعب (أو يلعب حالياً) لليفربول؟", fn: p => ["فيرجيل فان دايك", "محمد صلاح", "أليسون بيكر", "داروين نونيز", "ترينت ألكسندر أرنولد", "أليكسيس ماك أليستر", "ساديو ماني"].includes(p.name) },
+            { key: "playedForBayern", cat: "club", label: "هل لعب (أو يلعب حالياً) لبايرن ميونخ؟", fn: p => ["هاري كين", "روبرت ليفاندوفسكي", "مانويل نوير", "ألفونسو ديفيز", "جوشوا كيميش", "جمال موسيالا", "توني كروس", "ساديو ماني"].includes(p.name) },
+            { key: "playedForAlAhly", cat: "club", label: "هل لعب (أو يلعب حالياً) للنادي الأهلي المصري؟", fn: p => ["محمد الشناوي", "إمام عاشور", "بيرسي تاو", "وسام أبو علي", "حسين الشحات", "محمود تريزيجيه"].includes(p.name) }
+        ];
+
+        const categories = [
+            { key: "continent", label: "🌍 الجنسية والقارة", open: true },
+            { key: "position", label: "🎯 مركز اللعب", open: true },
+            { key: "league", label: "🏆 الدوري الحالي", open: false },
+            { key: "club", label: "🏟️ الأندية (حالياً أو سابقاً)", open: false }, // التصنيف الجديد
+            { key: "traits", label: "⭐ الإنجازات والصفات", open: false }
+        ];
+
+        /* ==================== UI HELPERS ==================== */
+        function showScreen(id) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+        }
+
+        function playerChipHTML(p) {
+            return `<span class="icon">${p.icon}</span><div class="pname">${p.name}</div><span class="ptag">${POS_LABEL[p.position]}</span>`;
+        }
+
+        /* ==================== ONLINE MULTIPLAYER (Firebase) ==================== */
+        const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        function genRoomCode() {
+            let c = "";
+            for (let i = 0; i < 4; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+            return c;
+        }
+
+        let onlineRole = null;      // 'host' | 'guest'
+        let onlineRoomCode = null;
+        let onlineSelectedIdx = null;
+        let onlinePendingMode = null; // 'create' | 'join'
+        let currentRoom = null;
+        let unsubscribeFn = null;
+
+        function roomRef(code) { return ref(db, `${ROOMS_PATH}/${code}`); }
+
+        async function saveRoom(room) {
+            room.updatedAt = Date.now();
+            try {
+                await set(roomRef(onlineRoomCode), room);
+            } catch (e) {
+                console.error(e);
+                const errEl = document.getElementById("lobbyError");
+                if (errEl) errEl.textContent = "في مشكلة في الاتصال بالسيرفر، جرّب تاني.";
+            }
+            currentRoom = room;
+            return room;
+        }
+
+        async function loadRoom(code) {
+            try {
+                const snap = await get(roomRef(code));
+                if (!snap.exists()) return null;
+                return snap.val();
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+
+        function subscribeRoom(phase) {
+            unsubscribeRoom();
+            unsubscribeFn = onValue(roomRef(onlineRoomCode), (snap) => {
+                if (!snap.exists()) return;
+                currentRoom = snap.val();
+
+                if (phase === "battle") {
+                    renderOnlineBattle();
+                    if (currentRoom.status === "finished") {
+                        unsubscribeRoom();
+                        setTimeout(showOnlineResult, 900);
+                    }
+                }
+            }, (err) => { console.error(err); });
+        }
+
+        function unsubscribeRoom() {
+            if (unsubscribeFn) { unsubscribeFn(); unsubscribeFn = null; }
+        }
+
+        function showJoinInput() {
+            document.getElementById("joinInputWrap").style.display = "flex";
+            document.getElementById("lobbyError").textContent = "";
+        }
+
+        function goCreateRoom() {
+            onlinePendingMode = "create";
+            onlineSelectedIdx = null;
+            document.getElementById("onlineSelectPrompt").textContent = "👤 اختر لاعبك السري — صديقك هيدخل بعد كده";
+            document.getElementById("onlineConfirmBtn").textContent = "أنشئ الغرفة ⚡";
+            document.getElementById("onlineConfirmBtn").disabled = true;
+            buildOnlineSelectGrid();
+            showScreen("screen-online-select");
+        }
+
+        async function attemptJoinRoom() {
+            const input = document.getElementById("joinCodeInput");
+            const code = input.value.trim().toUpperCase();
+            const errEl = document.getElementById("lobbyError");
+            errEl.textContent = "";
+            if (code.length !== 4) { errEl.textContent = "الكود لازم يكون 4 حروف/أرقام."; return; }
+            const room = await loadRoom(code);
+            if (!room) { errEl.textContent = "مفيش غرفة بالكود ده. اتأكد من صاحبك."; return; }
+            if (room.status !== "waiting-guest") { errEl.textContent = "الغرفة دي مش متاحة للانضمام دلوقتي."; return; }
+
+            onlinePendingMode = "join";
+            onlineRoomCode = code;
+            currentRoom = room;
+            onlineSelectedIdx = null;
+            document.getElementById("onlineSelectPrompt").textContent = "👤 اختر لاعبك السري وابدأوا السباق";
+            document.getElementById("onlineConfirmBtn").textContent = "ادخل السباق ⚡";
+            document.getElementById("onlineConfirmBtn").disabled = true;
+            buildOnlineSelectGrid();
+            showScreen("screen-online-select");
+        }
+
+        // دالة لتغيير الفلتر وتحديث شكل الأزرار
+        function changeFilter(pos, btnEl) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            buildOnlineSelectGrid(pos);
+        }
+
+        // تعديل دالة بناء الشبكة لتدعم الفلترة
+        function buildOnlineSelectGrid(filterPos = 'ALL') {
+            const wrap = document.getElementById("onlinePlayersGrid");
+            wrap.innerHTML = "";
+            let count = 0;
+
+            players.forEach((p, idx) => {
+                // تخطي اللاعب لو الفلتر شغال وهو مش في المركز المطلوب
+                if (filterPos !== 'ALL' && p.position !== filterPos) return;
+
+                count++;
+                const div = document.createElement("div");
+                div.className = "player-chip";
+                div.style.setProperty("--pos-color", POS_COLOR[p.position]);
+
+                // للحفاظ على تحديد اللاعب لو غيرت الفلتر ورجعتله تاني
+                if (onlineSelectedIdx === idx) div.classList.add("selected");
+
+                div.innerHTML = playerChipHTML(p);
+                div.onclick = () => {
+                    // إزالة التحديد من باقي اللاعبين
+                    document.querySelectorAll("#onlinePlayersGrid .player-chip").forEach(c => c.classList.remove("selected"));
+                    div.classList.add("selected");
+                    onlineSelectedIdx = idx;
+                    document.getElementById("onlineConfirmBtn").disabled = false;
+                };
+                wrap.appendChild(div);
+            });
+
+            document.getElementById("onlineRosterCount").textContent = count + " لاعب";
+        }
+
+        document.getElementById("onlineConfirmBtn").addEventListener("click", async () => {
+            if (onlineSelectedIdx === null) return;
+
+            if (onlinePendingMode === "create") {
+                onlineRole = "host";
+                onlineRoomCode = genRoomCode();
+                const room = {
+                    status: "waiting-guest",
+                    hostSecretIdx: onlineSelectedIdx,
+                    turn: "host"
+                };
+                await saveRoom(room);
+                enterOnlineBattle();
+            } else {
+                onlineRole = "guest";
+                const room = currentRoom;
+                room.guestSecretIdx = onlineSelectedIdx;
+                room.status = "playing";
+                room.turn = "host";
+                await saveRoom(room);
+                enterOnlineBattle();
+            }
+        });
+
+        function mySecretIdx() { return onlineRole === "host" ? currentRoom.hostSecretIdx : currentRoom.guestSecretIdx; }
+        function opponentSecretIdx() { return onlineRole === "host" ? currentRoom.guestSecretIdx : currentRoom.hostSecretIdx; }
+        function opponentRole() { return onlineRole === "host" ? "guest" : "host"; }
+
+        function candidatesFor(role) {
+            let pool = players.slice();
+            (currentRoom.log || []).forEach(entry => {
+                if (entry.by !== role) return;
+                if (entry.type === "question") {
+                    const feat = features.find(f => f.key === entry.key);
+                    if (feat) pool = pool.filter(p => feat.fn(p) === entry.answer);
+                } else if (entry.type === "guess" && !entry.correct) {
+                    pool = pool.filter(p => p !== players[entry.guessIdx]);
+                }
+            });
+            return pool;
+        }
+
+        function usedQuestionsFor(role) {
+            return (currentRoom.log || []).filter(e => e.by === role && e.type === "question").map(e => e.key);
+        }
+
+        function turnCountFor(role) {
+            return (currentRoom.log || []).filter(e => e.by === role).length;
+        }
+
+        function enterOnlineBattle() {
+            document.getElementById("oMyPlayerName").innerHTML = `${players[mySecretIdx()].icon} ${players[mySecretIdx()].name}`;
+            document.getElementById("oRoomCodeTag").textContent = onlineRoomCode;
+            showScreen("screen-online-battle");
+            renderOnlineBattle();
+            subscribeRoom("battle"); // نبدأ الاستماع للتغيرات في الغرفة فوراً
+        }
+
+        function renderOnlineLog() {
+            const box = document.getElementById("oLogBox");
+            box.innerHTML = '<div class="log-title">📣 تعليق المباراة</div>';
+            const logs = currentRoom.log || [];
+            if (logs.length === 0 && currentRoom.status === "playing") {
+                box.innerHTML += '<div class="log-entry" style="color:#8fb3c4;">صافرة البداية! دور اللاعب المضيف 🎯</div>';
+            }
+            logs.forEach(entry => {
+                const div = document.createElement("div");
+                div.className = "log-entry";
+                const mine = entry.by === onlineRole;
+                const tagClass = mine ? "user-tag" : "ai-tag";
+                const who = mine ? "أنت" : "صاحبك";
+                let text = "";
+                if (entry.type === "question") {
+                    text = `سأل: ${entry.label} — الإجابة: <b>${entry.answer ? "نعم" : "لا"}</b>`;
+                } else {
+                    const p = players[entry.guessIdx];
+                    text = `خمّن: ${p.icon} ${p.name} — <b>${entry.correct ? "صحيح! 🎉" : "خطأ ❌"}</b>`;
+                }
+                div.innerHTML = `<span class="tag ${tagClass}">${who}</span> ${text}`;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function renderOnlineBattle() {
+            if (!currentRoom) return;
+
+            const isWaitingGuest = typeof currentRoom.guestSecretIdx === 'undefined' || currentRoom.guestSecretIdx === null;
+
+            document.getElementById("oUserQCount").textContent = turnCountFor(onlineRole);
+            document.getElementById("oFriendQCount").textContent = turnCountFor(opponentRole());
+
+            if (!isWaitingGuest) {
+                document.getElementById("oUserCandCount").textContent = candidatesFor(onlineRole).length;
+                document.getElementById("oFriendCandCount").textContent = candidatesFor(opponentRole()).length;
+            } else {
+                document.getElementById("oUserCandCount").textContent = players.length;
+                document.getElementById("oFriendCandCount").textContent = players.length;
+            }
+
+            const banner = document.getElementById("oTurnBanner");
+
+            // حالة: الغرفة مُنشأة وفي انتظار دخول الصديق
+            if (isWaitingGuest) {
+                banner.className = "turn-banner ai";
+                banner.textContent = `⏳ في انتظار انضمام صديقك... (الكود: ${onlineRoomCode})`;
+                document.getElementById("oMyTurnBox").style.display = "none";
+                document.getElementById("oWaitTurnBox").style.display = "block";
+                document.getElementById("oWaitTurnBox").innerHTML = `
+      <div class="waiting-turn-box">
+        شارك هذا الكود مع صديقك لبدء اللعب: <br>
+        <b style="color:var(--gold); font-size:32px; letter-spacing:4px; display:inline-block; margin-top:12px;">${onlineRoomCode}</b>
+        <br><br>
+        <span class="waiting-pulse"></span>
+      </div>
+    `;
+                renderOnlineLog();
+                return;
+            }
+
+            // حالة: الصديق انضم واللعب شغال بشكل طبيعي
+            const myTurn = currentRoom.turn === onlineRole;
+            banner.className = "turn-banner " + (myTurn ? "user" : "ai");
+            banner.textContent = myTurn ? "دورك — اسأل أو خمّن لاعب صاحبك" : "دور صاحبك دلوقتي";
+
+            document.getElementById("oMyTurnBox").style.display = myTurn ? "block" : "none";
+            document.getElementById("oWaitTurnBox").style.display = myTurn ? "none" : "block";
+
+            if (!myTurn) {
+                document.getElementById("oWaitTurnBox").innerHTML = `
+      <div class="waiting-turn-box">⏳ دور صاحبك دلوقتي... استنى شوية<span class="waiting-pulse"></span></div>
+    `;
+            }
+
+            document.getElementById("oGuessGridWrap").style.display = "none";
+
+            if (myTurn) renderOnlineCategories();
+            renderOnlineLog();
+        }
+
+        function renderOnlineCategories() {
+            const wrap = document.getElementById("oCategoriesWrap");
+            wrap.innerHTML = "";
+            const used = usedQuestionsFor(onlineRole);
+            categories.forEach(cat => {
+                const featsLeft = features.filter(f => f.cat === cat.key && !used.includes(f.key));
+                if (featsLeft.length === 0) return;
+                const catDiv = document.createElement("div");
+                catDiv.className = "cat" + (cat.open ? " open" : "");
+                catDiv.innerHTML = `
+      <div class="cat-head">
+        <span>${cat.label}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span class="count">${featsLeft.length} سؤال</span>
+          <span class="chev">▾</span>
+        </span>
+      </div>
+      <div class="cat-body"><div class="questions-list"></div></div>
+    `;
+                const head = catDiv.querySelector(".cat-head");
+                head.onclick = () => { cat.open = !cat.open; catDiv.classList.toggle("open"); };
+                const list = catDiv.querySelector(".questions-list");
+                featsLeft.forEach(f => {
+                    const item = document.createElement("div");
+                    item.className = "q-item";
+                    item.textContent = f.label;
+                    item.onclick = () => askOnlineQuestion(f);
+                    list.appendChild(item);
+                });
+                wrap.appendChild(catDiv);
+            });
+        }
+
+        async function askOnlineQuestion(feature) {
+            const answer = feature.fn(players[opponentSecretIdx()]);
+            const room = currentRoom;
+            room.log = room.log || [];
+            room.log.push({ by: onlineRole, type: "question", key: feature.key, label: feature.label, answer });
+            room.turn = opponentRole();
+            await saveRoom(room);
+            renderOnlineBattle();
+        }
+
+        function openOnlineGuessGrid() {
+            const wrap = document.getElementById("oGuessGrid");
+            wrap.innerHTML = "";
+            const cands = candidatesFor(onlineRole);
+            players.forEach((p, idx) => {
+                const div = document.createElement("div");
+                div.className = "player-chip";
+                div.style.setProperty("--pos-color", POS_COLOR[p.position]);
+                if (!cands.includes(p)) div.classList.add("eliminated");
+                div.innerHTML = playerChipHTML(p);
+                div.onclick = () => submitOnlineGuess(idx);
+                wrap.appendChild(div);
+            });
+            document.getElementById("oGuessGridWrap").style.display = "block";
+        }
+
+        async function submitOnlineGuess(idx) {
+            const room = currentRoom;
+            const correct = idx === opponentSecretIdx();
+            room.log = room.log || [];
+            room.log.push({ by: onlineRole, type: "guess", guessIdx: idx, correct });
+            if (correct) {
+                room.status = "finished";
+                room.winner = onlineRole;
+            } else {
+                room.turn = opponentRole();
+            }
+            await saveRoom(room);
+            if (correct) {
+                unsubscribeRoom();
+                renderOnlineLog();
+                setTimeout(showOnlineResult, 900);
+            } else {
+                renderOnlineBattle();
+            }
+        }
+
+        function showOnlineResult() {
+            showScreen("screen-online-result");
+            const myP = players[mySecretIdx()];
+            const oppP = players[opponentSecretIdx()];
+            document.getElementById("oRevealUserIcon").textContent = myP.icon;
+            document.getElementById("oRevealUserName").textContent = myP.name;
+            document.getElementById("oRevealFriendIcon").textContent = oppP.icon;
+            document.getElementById("oRevealFriendName").textContent = oppP.name;
+
+            const iWon = currentRoom.winner === onlineRole;
+            document.getElementById("oResultIcon").textContent = iWon ? "🏆" : "🟥";
+            document.getElementById("oResultTitle").textContent = iWon ? "فزت!" : "فاز صاحبك!";
+            document.getElementById("oResultText").textContent = iWon
+                ? `خمّنت لاعب صاحبك بعد ${turnCountFor(onlineRole)} محاولة/سؤال!`
+                : `صاحبك خمّن لاعبك بعد ${turnCountFor(opponentRole())} محاولة/سؤال. حظ أوفر المرة الجاية!`;
+        }
+
+        function leaveOnline() {
+            unsubscribeRoom();
+            onlineRole = null;
+            onlineRoomCode = null;
+            currentRoom = null;
+            const joinWrap = document.getElementById("joinInputWrap");
+            if (joinWrap) joinWrap.style.display = "none";
+            const codeInput = document.getElementById("joinCodeInput");
+            if (codeInput) codeInput.value = "";
+            showScreen("screen-online-lobby");
+        }
+
+        /* إتاحة الدوال للـ HTML مباشرة */
+        Object.assign(window, {
+            goCreateRoom, showJoinInput, attemptJoinRoom,
+            leaveOnline, openOnlineGuessGrid, changeFilter
+        });
+    </script>
+</body>
+
+</html>
